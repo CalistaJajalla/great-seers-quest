@@ -1,0 +1,20 @@
+-- Locations for the quest
+INSERT INTO location VALUES 
+(1, 'Silverhelm', 'City', 'Northern Reaches', 'Plains', 'Temperate', 50000, 3, 'Light', 'King Aldric the Just', 'Easy'),
+(2, 'Ironkeep', 'City', 'Northern Reaches', 'Mountain', 'Cold', 30000, 4, 'Earth', 'Dwarf Council', 'Moderate'),
+(3, 'Sunhaven', 'City', 'Southern Plains', 'Grassland', 'Warm', 75000, 2, 'Light', 'Council of Elders', 'Easy'),
+(4, 'Shadowport', 'City', 'Eastern Coast', 'Coast', 'Mild', 40000, 5, 'Dark', 'Trade Consortium', 'Moderate'),
+(5, 'Crystalspire', 'City', 'Western Highlands', 'Mountain', 'Cold', 25000, 3, 'Water', 'Archmage Circle', 'Difficult'),
+(6, 'Oakvale', 'Village', 'Central Forests', 'Forest', 'Mild', 2000, 2, 'Earth', 'Elder Mirabel', 'Easy'),
+(7, 'Riverstone', 'Village', 'Southern Plains', 'Riverside', 'Warm', 1500, 2, 'Water', 'Mayor Gareth', 'Easy'),
+(8, 'Frostholm', 'Village', 'Northern Wastes', 'Tundra', 'Freezing', 800, 6, 'Air', 'Chieftain Bjorn', 'Difficult'),
+(9, 'Shadowfen Swamp', 'Swamp', 'Eastern Wilds', 'Wetland', 'Humid', 200, 9, 'Dark', 'None', 'Nearly Impossible'),
+(10, 'Dragonspine Peak', 'Mountain', 'Western Highlands', 'Mountain', 'Extreme', 0, 10, 'Fire', 'Ancient Dragons', 'Nearly Impossible'),
+(11, 'Whispering Woods', 'Forest', 'Central Forests', 'Dense Forest', 'Mild', 500, 7, 'Shadow', 'Fey Spirits', 'Difficult'),
+(12, 'Obsidian Wastes', 'Desert', 'Southern Wastes', 'Desert', 'Hot', 50, 8, 'Fire', 'None', 'Difficult'),
+(13, 'Temple of Eternal Light', 'Temple', 'Northern Reaches', 'Sacred Ground', 'Blessed', 100, 1, 'Light', 'High Priestess', 'Easy'),
+(14, 'Crypt of Forgotten Kings', 'Dungeon', 'Central Ruins', 'Underground', 'Cold', 0, 9, 'Necrotic', 'Undead', 'Nearly Impossible'),
+(15, 'Crystal Caverns', 'Cave', 'Western Highlands', 'Underground', 'Cold', 0, 5, 'Water', 'Elementals', 'Moderate'),
+(16, 'Ancient Ruins of Kal-Thara', 'Ruins', 'Eastern Wilds', 'Rocky', 'Temperate', 0, 7, 'Arcane', 'None', 'Difficult'),
+(17, 'Moonwell Grove', 'Forest', 'Western Woods', 'Sacred Grove', 'Mild', 300, 4, 'Light', 'Druid Circle', 'Moderate'),
+(18, 'Blackstone Fortress', 'Dungeon', 'Northern Wastes', 'Fortress', 'Cold', 0, 10, 'Dark', 'Demon Lord', 'Nearly Impossible');

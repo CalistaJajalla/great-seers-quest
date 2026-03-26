@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Great Seer's Quest</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        :root {
+            --gold: #d4af37; --gold-dim: #b8860b;
+            --bg: #0e0e1a; --surface: #1a1a2e; --surface2: #16213e;
+            --text: #e0e0e0; --text-dim: #aaa; --border: #2a2a4a;
+        }
+        body { margin: 0; font-family: Georgia, serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        #app-wrapper { max-width: 1300px; margin: 0 auto; padding: 20px; }
+
+        header { text-align: center; padding: 26px 20px 16px; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+        header h1 { color: var(--gold); font-size: 2em; margin: 0 0 4px; letter-spacing: 3px; text-shadow: 0 0 16px rgba(212,175,55,0.3); }
+        header p  { color: var(--text-dim); font-size: 0.88em; margin: 0; font-style: italic; }
+
+        #loading-screen { text-align: center; padding: 80px 20px; }
+        .spinner { width: 42px; height: 42px; border: 4px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #chapter-markers { display: flex; gap: 6px; margin-bottom: 16px; }
+        .progress-step { flex: 1; text-align: center; padding: 7px 4px; border-radius: 8px; font-size: 0.73em; line-height: 1.4; border: 1px solid var(--border); color: var(--text-dim); background: var(--surface2); }
+        .progress-step.done   { border-color: #90ee90; color: #90ee90; background: rgba(144,238,144,0.07); }
+        .progress-step.active { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.09); }
+
+        #stage-header { padding: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 14px; text-align: center; }
+        #stage-header h2 { margin: 5px 0; }
+
+        /* TOP: two columns */
+        .game-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; margin-bottom: 18px; }
+        @media (max-width: 760px) { .game-layout { grid-template-columns: 1fr; } }
+
+        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; min-width: 0; overflow: hidden; }
+
+        /* BOTTOM: full-width dataset browser */
+        #dataset-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+
+        #dataset-panel-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        #dataset-panel-header h4 { color: var(--gold); margin: 0; font-size: 0.92em; white-space: nowrap; }
+
+        #table-tabs { display: flex; gap: 5px; flex-wrap: wrap; }
+        .table-tab-btn { padding: 4px 12px; font-size: 0.74em; border: 1px solid var(--border); border-radius: 5px; background: var(--surface2); color: var(--text-dim); cursor: pointer; font-family: Georgia, serif; transition: border-color 0.15s, color 0.15s; }
+        .table-tab-btn:hover { border-color: var(--gold); color: var(--gold); }
+        .table-tab-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.1); }
+
+        #table-search { padding: 6px 11px; min-width: 240px; background: #0d1117; color: #90ee90; border: 1px solid var(--border); border-radius: 6px; font-family: 'Courier New', monospace; font-size: 0.84em; outline: none; margin-left: auto; }
+        #table-search:focus { border-color: var(--gold); }
+        #table-search::placeholder { color: #444; }
+
+        /* Clue */
+        #quest-description { font-size: 1.05em; line-height: 1.9; color: #ddd; background: rgba(212,175,55,0.07); border: 1px solid rgba(212,175,55,0.2); border-radius: 10px; padding: 15px; margin-bottom: 12px; }
+        em.clue-kw  { font-style: italic; color: #d4af37; font-weight: bold; background: rgba(212,175,55,0.10); border-radius: 3px; padding: 0 2px; }
+        em.clue-num { font-style: italic; color: #87ceeb; }
+        #difficulty-label { margin-bottom: 10px; }
+
+        /* Action buttons */
+        #action-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        #action-bar button { font-family: Georgia, serif; font-size: 0.82em; cursor: pointer; padding: 8px 14px; border-radius: 7px; transition: opacity 0.2s; white-space: nowrap; }
+        #action-bar button:hover:not(:disabled) { opacity: 0.72; }
+        .btn-blue  { background: rgba(135,206,235,0.13); border: 1px solid #87ceeb; color: #87ceeb; }
+        .btn-red   { background: rgba(255,99,99,0.10);   border: 1px solid #ff6363; color: #ff9999; }
+        .btn-gold  { background: rgba(212,175,55,0.11);  border: 1px solid #d4af37; color: #d4af37; }
+        .btn-green { background: rgba(144,238,144,0.07); border: 1px solid #90ee90; color: #90ee90; }
+        .hint-box  { background: rgba(135,206,235,0.07); border: 1px solid #87ceeb; border-radius: 8px; padding: 12px; margin-top: 10px; }
+
+        /* Query input */
+        .query-area-wrapper { position: relative; }
+        #query-input { width: 100%; min-height: 110px; background: #0d1117; color: #90ee90; border: 1px solid var(--border); border-radius: 8px; padding: 11px; font-family: 'Courier New', monospace; font-size: 0.91em; line-height: 1.6; resize: vertical; outline: none; }
+        #query-input:focus { border-color: var(--gold); }
+
+        /* Autocomplete */
+        #autocomplete-dropdown { display: none; position: absolute; z-index: 100; background: #1a1a2e; border: 1px solid #3a3a5a; border-radius: 6px; max-height: 180px; overflow-y: auto; box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
+        .ac-item { padding: 7px 12px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 0.85em; color: #90ee90; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .ac-item:hover, .ac-item.ac-active { background: rgba(212,175,55,0.15); color: #d4af37; }
+
+        #run-btn { margin-top: 8px; padding: 10px 26px; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%); color: #1e1e2e; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: Georgia, serif; font-size: 0.96em; transition: transform 0.13s; }
+        #run-btn:hover { transform: translateY(-1px); }
+        #run-btn:active { transform: translateY(1px); }
+
+        /* Shared table style */
+        .result-wrap { overflow: auto; max-height: 340px; max-width: 100%; border: 1px solid #333; border-radius: 7px; }
+        .result-wrap table { border-collapse: collapse; font-size: 0.79em; white-space: nowrap; width: max-content; min-width: 100%; }
+        .result-wrap th { border: 1px solid #444; padding: 7px 12px; background: #141428; color: var(--gold); text-align: left; position: sticky; top: 0; font-size: 0.87em; letter-spacing: 0.4px; }
+        .result-wrap th.col-hl { color: #111; background: #e8b000; }
+        .result-wrap td { border: 1px solid #2a2a3a; padding: 5px 12px; color: #ddd; }
+        .result-wrap tr:hover td { background: rgba(212,175,55,0.04); }
+        .result-wrap mark { background: #e8b000; color: #111; border-radius: 2px; padding: 0 2px; font-weight: bold; }
+
+        #query-result { margin-top: 10px; overflow: hidden; }
+
+        /* Difficulty */
+        #difficulty-screen { padding: 40px 20px; text-align: center; }
+        .diff-card { display: inline-block; width: 200px; margin: 10px; padding: 22px 16px; border-radius: 12px; cursor: pointer; border: 2px solid var(--border); background: var(--surface2); transition: border-color 0.2s, background 0.2s; vertical-align: top; }
+        .diff-card:hover { border-color: var(--gold); background: rgba(212,175,55,0.07); }
+        .diff-card.selected { border-color: var(--gold); background: rgba(212,175,55,0.13); }
+        .diff-card h3 { margin: 0 0 6px; font-size: 1.1em; }
+        .diff-card p  { margin: 0; font-size: 0.83em; color: #888; line-height: 1.5; }
+
+        #transition-screen, #ending-screen { padding: 20px; }
+
+        #error-screen { text-align: center; padding: 60px 20px; }
+        #error-screen h2 { color: #ff6363; }
+        #error-detail { background: rgba(255,99,99,0.1); border: 1px solid #ff6363; border-radius: 8px; padding: 14px; color: #ffaaaa; font-family: monospace; margin: 18px auto; max-width: 600px; text-align: left; }
+    </style>
+</head>
+<body>
+<div id="app-wrapper">
+    <header>
+        <h1>THE GREAT SEER'S QUEST</h1>
+        <p>Use your Veilsight to uncover the hero, the armor, the weapon, and the darkness</p>
+    </header>
+
+    <div id="backstory-screen" class="screen active"><div id="story-text"></div></div>
+    <div id="tutorial-screen" class="screen"><div id="tutorial-content"></div></div>
+
+    <div id="difficulty-screen" class="screen">
+        <h2 style="color:var(--gold); margin-bottom:8px;">Choose Your Difficulty</h2>
+        <p style="color:#888; margin-bottom:28px;">Each chapter scales progressively harder than the one before it.</p>
+        <div id="diff-cards">
+            <div class="diff-card" onclick="selectDifficulty(1,this)"><h3 style="color:#90ee90;">Novice</h3><p>Simple WHERE filters. Great for learning SQL basics.</p></div>
+            <div class="diff-card selected" onclick="selectDifficulty(2,this)"><h3 style="color:#ffd700;">Apprentice</h3><p>JOINs introduced. Moderate filter complexity. Recommended.</p></div>
+            <div class="diff-card" onclick="selectDifficulty(3,this)"><h3 style="color:#ff8c00;">Adept</h3><p>Multiple JOINs, more columns required per answer.</p></div>
+            <div class="diff-card" onclick="selectDifficulty(4,this)"><h3 style="color:#ff4444;">Expert</h3><p>All chapters at max difficulty. Many filters, all tables used.</p></div>
+        </div>
+        <div style="margin-top:32px;">
+            <button onclick="startQuest()" style="padding:16px 52px; font-size:18px; background:linear-gradient(135deg,#d4af37 0%,#b8860b 100%); color:#1e1e2e; border:none; border-radius:12px; cursor:pointer; font-weight:bold; font-family:Georgia,serif;">Begin Quest</button>
+        </div>
+    </div>
+
+    <div id="loading-screen" class="screen">
+        <div class="spinner"></div>
+        <p id="loading-message" style="color:var(--gold); font-size:1.2em;">Awakening the Veilsight...</p>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div id="chapter-markers">
+            <div class="progress-step active" id="prog-hero">Chapter I<br>The Hero</div>
+            <div class="progress-step"        id="prog-armor">Chapter II<br>The Armor</div>
+            <div class="progress-step"        id="prog-weapon">Chapter III<br>The Weapon</div>
+            <div class="progress-step"        id="prog-calamity">Chapter IV<br>The Darkness</div>
+        </div>
+
+        <div id="stage-header"></div>
+
+        <!-- TOP: clue (left) + query (right) -->
+        <div class="game-layout">
+            <div class="panel">
+                <div id="quest-description"></div>
+                <div id="difficulty-label"></div>
+                <div id="action-bar"></div>
+                <div id="hint-area"></div>
+            </div>
+            <div class="panel">
+                <h4 style="color:var(--gold); margin:0 0 6px;">Cast Your Vision:</h4>
+                <p style="color:#555; font-size:0.78em; margin:0 0 8px;">
+                    Must return <strong style="color:#888;">exactly 1 row</strong> to confirm.
+                    Strings are <strong style="color:#888;">case-insensitive</strong> automatically.
+                    <kbd style="background:#222; border:1px solid #444; border-radius:3px; padding:1px 5px; font-size:0.9em;">Tab</kbd> autocompletes column names.
+                </p>
+                <div class="query-area-wrapper">
+                    <textarea id="query-input" placeholder="SELECT * FROM person WHERE ..."></textarea>
+                    <div id="autocomplete-dropdown"></div>
+                </div>
+                <button id="run-btn" onclick="runQuery()">Cast Veilsight</button>
+                <div id="query-result"></div>
+            </div>
+        </div>
+
+        <!-- BOTTOM: full-width dataset browser -->
+        <div id="dataset-panel">
+            <div id="dataset-panel-header">
+                <h4>&#128196; Dataset Browser</h4>
+                <div id="table-tabs">
+                    <!-- populated by JS once world is loaded -->
+                </div>
+                <input id="table-search" type="text" placeholder="Highlight search (col names + values)..." oninput="onTableSearch(this.value)" />
+            </div>
+            <div id="dataset-content">
+                <p style="color:#555; font-size:0.82em; font-style:italic; margin:4px 0;">Start the quest to browse the dataset.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="transition-screen" class="screen"><div id="transition-content"></div></div>
+    <div id="ending-screen"    class="screen"><div id="ending-content"></div></div>
+
+    <div id="error-screen" class="screen">
+        <h2>Something Went Wrong</h2>
+        <p style="color:var(--text-dim);">The vision failed to materialize.</p>
+        <div id="error-detail"></div>
+        <ul style="color:var(--text-dim); text-align:left; max-width:500px; margin:14px auto;">
+            <li>Make sure <code>data/schema.sql</code> exists</li>
+            <li>Make sure <code>data/locations.sql</code> exists</li>
+            <li>Run: <code>python -m http.server 8000</code></li>
+            <li>Open console (F12) for details</li>
+        </ul>
+        <button onclick="location.reload()" style="padding:10px 24px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:8px; cursor:pointer;">Try Again</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+<script src="js/client_side_generator.js"></script>
+<script src="js/database.js"></script>
+<script src="js/app.js"></script>
+<script>
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            const inp = document.getElementById('query-input');
+            if (inp && document.activeElement === inp) runQuery();
+        }
+    });
+    function selectDifficulty(level, el) {
+        selectedDifficulty = level;
+        document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+</script>
+</body>
+</html>
